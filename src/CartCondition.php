@@ -63,7 +63,7 @@ class CartCondition
      */
     public function getTarget()
     {
-        return (isset($this->args['target'])) ? $this->args['target'] : '';
+        return $this->args['target'] ?? '';
     }
 
     /**
@@ -93,14 +93,14 @@ class CartCondition
      */
     public function getAttributes()
     {
-        return (isset($this->args['attributes'])) ? $this->args['attributes'] : [];
+        return $this->args['attributes'] ?? [];
     }
 
     /**
      * Set the order to apply this condition. If no argument order is applied we return 0 as
      * indicator that no assignment has been made
      * @param int $order
-     * @return Integer
+     * @return void
      */
     public function setOrder($order = 1)
     {
@@ -140,7 +140,7 @@ class CartCondition
     {
         // if value has a percentage sign on it, we will get first
         // its percentage then we will evaluate again if the value
-        // has a minus or plus sign so we can decide what to do with the
+        // has a minus or plus sign, so we can decide what to do with the
         // percentage, whether to add or subtract it to the total/subtotal/price
         // if we can't find any plus/minus sign, we will assume it as plus sign
         if ($this->valueIsPercentage($conditionValue)) {
@@ -161,26 +161,24 @@ class CartCondition
 
                 $this->parsedRawValue = $totalOrSubTotalOrPrice * ($value / 100);
 
-                $result = floatval($totalOrSubTotalOrPrice + $this->parsedRawValue);
+                $result = (float)($totalOrSubTotalOrPrice + $this->parsedRawValue);
             }
         }
 
         // if the value has no percent sign on it, the operation will not be a percentage
-        // next is we will check if it has a minus/plus sign so then we can just deduct it to total/subtotal/price
-        else {
-            if ($this->valueIsToBeSubtracted($conditionValue)) {
-                $this->parsedRawValue = normalizePrice($this->cleanValue($conditionValue));
+        // next is we will check if it has a minus/plus sign, so then we can just deduct it to total/subtotal/price
+        else if ($this->valueIsToBeSubtracted($conditionValue)) {
+            $this->parsedRawValue = normalizePrice($this->cleanValue($conditionValue));
 
-                $result = (float)($totalOrSubTotalOrPrice - $this->parsedRawValue);
-            } else if ($this->valueIsToBeAdded($conditionValue)) {
-                $this->parsedRawValue = normalizePrice($this->cleanValue($conditionValue));
+            $result = (float)($totalOrSubTotalOrPrice - $this->parsedRawValue);
+        } else if ($this->valueIsToBeAdded($conditionValue)) {
+            $this->parsedRawValue = normalizePrice($this->cleanValue($conditionValue));
 
-                $result = (float)($totalOrSubTotalOrPrice + $this->parsedRawValue);
-            } else {
-                $this->parsedRawValue = normalizePrice($conditionValue);
+            $result = (float)($totalOrSubTotalOrPrice + $this->parsedRawValue);
+        } else {
+            $this->parsedRawValue = normalizePrice($conditionValue);
 
-                $result = (float)($totalOrSubTotalOrPrice + $this->parsedRawValue);
-            }
+            $result = (float)($totalOrSubTotalOrPrice + $this->parsedRawValue);
         }
 
         // Do not allow items with negative prices.
@@ -195,7 +193,7 @@ class CartCondition
      */
     protected function valueIsPercentage($value)
     {
-        return (preg_match('/%/', $value) == 1);
+        return (preg_match('/%/', $value) === 1);
     }
 
     /**
@@ -206,7 +204,7 @@ class CartCondition
      */
     protected function valueIsToBeSubtracted($value)
     {
-        return (preg_match('/\-/', $value) == 1);
+        return (preg_match('/\-/', $value) === 1);
     }
 
     /**
@@ -228,7 +226,7 @@ class CartCondition
      */
     protected function valueIsToBeAdded($value)
     {
-        return (preg_match('/\+/', $value) == 1);
+        return (false !== strpos($value, "+"));
     }
 
     /**

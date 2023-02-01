@@ -1,5 +1,9 @@
 <?php
 
+use Illuminate\Contracts\Events\Dispatcher;
+use Mohamadtsn\ShoppingCart\Exceptions\InvalidItemException;
+use Mohamadtsn\ShoppingCart\ItemAttributeCollection;
+
 /**
  * Created by PhpStorm.
  * User: darryl
@@ -7,23 +11,23 @@
  * Time: 9:59 PM
  */
 
-use src\Cart;
+use Mohamadtsn\ShoppingCart\Cart;
 use Mockery as m;
-use Darryldecode\Tests\helpers\MockProduct;
+use Tests\Helpers\MockProduct;
+use Tests\Helpers\SessionMock;
 
-require_once __DIR__ . '/helpers/SessionMock.php';
 
 class CartTest extends PHPUnit\Framework\TestCase
 {
 
     /**
-     * @var \src\Cart
+     * @var Mohamadtsn\ShoppingCart\Cart
      */
     protected $cart;
 
     public function setUp(): void
     {
-        $events = m::mock('Illuminate\Contracts\Events\Dispatcher');
+        $events = m::mock(Dispatcher::class);
         $events->shouldReceive('dispatch');
 
         $this->cart = new Cart(
@@ -79,7 +83,7 @@ class CartTest extends PHPUnit\Framework\TestCase
                 'attributes' => [],
             ],
             [
-                'id' => 568,
+                'id' => 88,
                 'name' => 'Sample Item 2',
                 'price' => 69.25,
                 'quantity' => 4,
@@ -132,7 +136,7 @@ class CartTest extends PHPUnit\Framework\TestCase
         // ItemAttributeCollection
         $item = $this->cart->get(456);
 
-        $this->assertInstanceOf('src\ItemAttributeCollection', $item->attributes);
+        $this->assertInstanceOf(ItemAttributeCollection::class, $item->attributes);
 
         // now lets update the item with its new attributes
         // when we get that item from cart, it should still be an instance of ItemAttributeCollection
@@ -341,7 +345,7 @@ class CartTest extends PHPUnit\Framework\TestCase
 
         $this->cart->add($items);
 
-        $this->assertEquals(273.22, $this->cart->getSubTotal(), 'Cart should have sub total of 273.22');
+        $this->assertEqualsWithDelta(273.22, $this->cart->getSubTotal(), 0.001, 'Cart should have sub total of 273.22');
 
         // when cart's item quantity is updated, the subtotal should be updated as well
         $this->cart->update(456, ['quantity' => 2]);
@@ -370,7 +374,7 @@ class CartTest extends PHPUnit\Framework\TestCase
 
         $this->cart->add($items);
 
-        $this->assertEquals(273.22, $this->cart->getSubTotal(), 'Cart should have sub total of 273.22');
+        $this->assertEqualsWithDelta(273.22, $this->cart->getSubTotal(), 0.001, 'Cart should have sub total of 273.22');
 
         // when cart's item quantity is updated, the subtotal should be updated as well
         $this->cart->update(456, ['quantity' => -1]);
@@ -424,13 +428,13 @@ class CartTest extends PHPUnit\Framework\TestCase
 
     public function test_should_throw_exception_when_provided_invalid_values_scenario_two()
     {
-        $this->expectException('src\Exceptions\InvalidItemException');
+        $this->expectException(InvalidItemException::class);
         $this->cart->add('', 'Sample Item', 100.99, 2, []);
     }
 
     public function test_should_throw_exception_when_provided_invalid_values_scenario_three()
     {
-        $this->expectException('src\Exceptions\InvalidItemException');
+        $this->expectException(InvalidItemException::class);
         $this->cart->add(523, '', 100.99, 2, []);
     }
 
@@ -510,7 +514,7 @@ class CartTest extends PHPUnit\Framework\TestCase
         $this->assertEquals(1, $this->cart->getContent()->count(), 'Cart should have 1 item on it');
         $this->assertEquals(456, $this->cart->getContent()->first()['id'], 'The first content must have ID of 456');
         $this->assertEquals('Sample Item', $this->cart->getContent()->first()['name'], 'The first content must have name of "Sample Item"');
-        $this->assertInstanceOf('Darryldecode\Tests\helpers\MockProduct', $addedItem->model);
+        $this->assertInstanceOf(MockProduct::class, $addedItem->model);
     }
 
     public function test_cart_can_add_items_with_multidimensional_array_with_associated_model()
@@ -546,7 +550,7 @@ class CartTest extends PHPUnit\Framework\TestCase
 
         $content = $this->cart->getContent();
         foreach ($content as $item) {
-            $this->assertInstanceOf('Darryldecode\Tests\helpers\MockProduct', $item->model);
+            $this->assertInstanceOf(MockProduct::class, $item->model);
         }
 
         $this->assertFalse($this->cart->isEmpty(), 'Cart should not be empty');

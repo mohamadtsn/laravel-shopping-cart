@@ -6,12 +6,6 @@
 
 A Shopping Cart Implementation for Laravel Framework
 
-## QUICK PARTIAL DEMO
-
-Demo: https://shoppingcart-demo.darrylfernandez.com/cart
-
-Git repo of the demo: https://github.com/darryldecode/laravelshoppingcart-demo
-
 ## INSTALLATION
 
 Install the package through [Composer](http://getcomposer.org/).
@@ -35,7 +29,7 @@ Mohamadtsn\ShoppingCart\CartServiceProvider::class
 2. Open config/app.php and add this line to your Aliases
 
 ```php
-  'Cart' => \src\Facades\CartFacade::class
+  'Cart' => Mohamadtsn\ShoppingCart\Facades\CartFacade::class
 ```
 
 3. Optional configuration file (useful if you plan to have full control)
@@ -435,7 +429,7 @@ by adding 'order' parameter in CartCondition.
 ```php
 
 // add single condition on a cart bases
-$condition = new src\CartCondition(array(
+$condition = new Mohamadtsn\ShoppingCart\CartCondition(array(
     'name' => 'VAT 12.5%',
     'type' => 'tax',
     'target' => 'subtotal', // this condition will be applied to cart's subtotal when getSubTotal() is called.
@@ -450,14 +444,14 @@ Cart::condition($condition);
 Cart::session($userId)->condition($condition); // for a speicifc user's cart
 
 // or add multiple conditions from different condition instances
-$condition1 = new src\CartCondition(array(
+$condition1 = new Mohamadtsn\ShoppingCart\CartCondition(array(
     'name' => 'VAT 12.5%',
     'type' => 'tax',
     'target' => 'subtotal', // this condition will be applied to cart's subtotal when getSubTotal() is called.
     'value' => '12.5%',
     'order' => 2
 ));
-$condition2 = new src\CartCondition(array(
+$condition2 = new Mohamadtsn\ShoppingCart\CartCondition(array(
     'name' => 'Express Shipping $15',
     'type' => 'shipping',
     'target' => 'subtotal', // this condition will be applied to cart's subtotal when getSubTotal() is called.
@@ -471,7 +465,7 @@ Cart::condition($condition2);
 // will also be affected as getTotal() depends in getSubTotal() which is the subtotal.
 
 // add condition to only apply on totals, not in subtotal
-$condition = new src\CartCondition(array(
+$condition = new Mohamadtsn\ShoppingCart\CartCondition(array(
     'name' => 'Express Shipping $15',
     'type' => 'shipping',
     'target' => 'total', // this condition will be applied to cart's total when getTotal() is called.
@@ -537,7 +531,7 @@ Now let's add condition on an item.
 ```php
 
 // lets create first our condition instance
-$saleCondition = new src\CartCondition(array(
+$saleCondition = new Mohamadtsn\ShoppingCart\CartCondition(array(
             'name' => 'SALE 5%',
             'type' => 'tax',
             'value' => '-5%',
@@ -557,7 +551,7 @@ $product = array(
 Cart::add($product);
 
 // you may also add multiple condition on an item
-$itemCondition1 = new src\CartCondition(array(
+$itemCondition1 = new Mohamadtsn\ShoppingCart\CartCondition(array(
     'name' => 'SALE 5%',
     'type' => 'sale',
     'value' => '-5%',
@@ -834,7 +828,7 @@ $this->app['wishlist'] = $this->app->share(function($app)
 		});
 
 // for 5.4 or newer
-use src\Cart;
+use Mohamadtsn\ShoppingCart\Cart;
 use Illuminate\Support\ServiceProvider;
 
 class WishListProvider extends ServiceProvider
@@ -1135,7 +1129,7 @@ namespace App\Cart;
 
 use Carbon\Carbon;
 use Cookie;
-use src\CartCollection;
+use Mohamadtsn\ShoppingCart\CartCollection;
 
 class CacheStorage
 {
@@ -1191,7 +1185,7 @@ to your cart instance by injecting it to the service provider of your wishlist c
 to use your custom storage. See below:
 
 ```php
-use src\Cart;
+use Mohamadtsn\ShoppingCart\Cart;
 use Illuminate\Support\ServiceProvider;
 
 class WishListProvider extends ServiceProvider

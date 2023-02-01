@@ -1,4 +1,5 @@
-<?php
+<?php use Illuminate\Contracts\Events\Dispatcher;
+
 /**
  * Created by PhpStorm.
  * User: darryl
@@ -6,22 +7,22 @@
  * Time: 6:17 PM
  */
 
-use src\Cart;
+use Mohamadtsn\ShoppingCart\Cart;
 use Mockery as m;
+use Tests\Helpers\SessionMock;
 
-require_once __DIR__ . '/helpers/SessionMock.php';
 
 class ItemTestOtherFormat extends PHPUnit\Framework\TestCase
 {
 
     /**
-     * @var \src\Cart
+     * @var Mohamadtsn\ShoppingCart\Cart
      */
     protected $cart;
 
     public function setUp(): void
     {
-        $events = m::mock('Illuminate\Contracts\Events\Dispatcher');
+        $events = m::mock(Dispatcher::class);
         $events->shouldReceive('dispatch');
 
         $this->cart = new Cart(

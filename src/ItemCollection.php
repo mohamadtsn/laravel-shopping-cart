@@ -34,7 +34,7 @@ class ItemCollection extends CartItemAbstract
         $this->model = $this->getAssociatedModel();
     }
 
-    public function getPriceSum(bool $formatted)
+    public function getPriceSum(bool $formatted = true)
     {
         return formatValue($this->price * $this->quantity, $this->config['format_numbers'], $this->config);
     }
@@ -64,11 +64,11 @@ class ItemCollection extends CartItemAbstract
     /**
      * check if item has conditions
      *
-     * @return mixed|null
+     * @return array|CartCondition
      */
     public function getConditions()
     {
-        return !$this->hasConditions() ? [] : $this['conditions'];
+        return !$this->hasConditions() ? [] : $this->conditions;
     }
 
     /**
@@ -84,7 +84,8 @@ class ItemCollection extends CartItemAbstract
         if (is_array($this['conditions'])) {
             return count($this['conditions']) > 0;
         }
-        return $this['conditions'] instanceof CartCondition::class;
+
+        return $this['conditions'] instanceof (CartCondition::class);
     }
 
     /**
@@ -116,7 +117,7 @@ class ItemCollection extends CartItemAbstract
                     $processed++;
                 }
             } else {
-                $newPrice = $this['conditions']->applyCondition($originalPrice);
+                $newPrice = $this->conditions->applyCondition($originalPrice);
             }
 
             return formatValue($newPrice, $formatted, $this->config);

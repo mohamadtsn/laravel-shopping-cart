@@ -1,6 +1,6 @@
 <?php
 
-namespace Darryldecode\Tests\helpers;
+namespace Tests\Helpers;
 
 use Illuminate\Contracts\Database\ModelIdentifier;
 

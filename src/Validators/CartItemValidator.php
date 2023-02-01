@@ -1,6 +1,6 @@
 <?php namespace Mohamadtsn\ShoppingCart\Validators;
 
-use src\Validators\Validator;
+use Mohamadtsn\ShoppingCart\Validators\Validator;
 
 /**
  * Created by PhpStorm.

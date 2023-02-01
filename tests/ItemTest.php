@@ -1,4 +1,7 @@
 <?php
+
+use Illuminate\Contracts\Events\Dispatcher;
+
 /**
  * Created by PhpStorm.
  * User: darryl
@@ -8,10 +11,10 @@
 
 use Mohamadtsn\ShoppingCart\Cart;
 use Mockery as m;
-use src\CartCondition;
-use Darryldecode\Tests\helpers\MockProduct;
+use Mohamadtsn\ShoppingCart\CartCondition;
+use Tests\Helpers\MockProduct;
+use Tests\Helpers\SessionMock;
 
-require_once __DIR__ . '/helpers/SessionMock.php';
 
 class ItemTest extends PHPUnit\Framework\TestCase
 {
@@ -23,7 +26,7 @@ class ItemTest extends PHPUnit\Framework\TestCase
 
     public function setUp(): void
     {
-        $events = m::mock('Illuminate\Contracts\Events\Dispatcher');
+        $events = m::mock(Dispatcher::class);
         $events->shouldReceive('dispatch');
 
         $this->cart = new Cart(
@@ -69,7 +72,7 @@ class ItemTest extends PHPUnit\Framework\TestCase
 
     public function test_item_get_conditions_with_conditions()
     {
-        $itemCondition1 = new src\CartCondition([
+        $itemCondition1 = new CartCondition([
             'name' => 'SALE 5%',
             'type' => 'sale',
             'target' => 'item',
@@ -101,7 +104,7 @@ class ItemTest extends PHPUnit\Framework\TestCase
 
     public function test_it_will_throw_an_exception_when_a_non_existing_model_is_being_associated()
     {
-        $this->expectException(\src\Exceptions\UnknownModelException::class);
+        $this->expectException(Mohamadtsn\ShoppingCart\Exceptions\UnknownModelException::class);
         $this->expectExceptionMessage('The supplied model SomeModel does not exist.');
 
         $this->cart->add(1, 'Test item', 1, 10.00)->associate('SomeModel');

@@ -9,8 +9,8 @@ if (!function_exists('normalizePrice')) {
 if (!function_exists('isMultiArray')) {
     function isMultiArray(array $array): bool
     {
-        foreach ($array as $v) {
-            if (is_array($v)) {
+        foreach ($array as $key => $v) {
+            if (is_numeric($key) && is_array($v) && count($v) > 0) {
                 return true;
             }
         }

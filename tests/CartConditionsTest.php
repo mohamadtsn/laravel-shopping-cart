@@ -1,4 +1,7 @@
 <?php
+
+use Illuminate\Contracts\Events\Dispatcher;
+
 /**
  * Created by PhpStorm.
  * User: darryl
@@ -6,23 +9,23 @@
  * Time: 9:59 PM
  */
 
-use src\Cart;
-use src\CartCondition;
+use Mohamadtsn\ShoppingCart\Cart;
+use Mohamadtsn\ShoppingCart\CartCondition;
 use Mockery as m;
+use Tests\Helpers\SessionMock;
 
-require_once __DIR__ . '/helpers/SessionMock.php';
 
 class CartConditionTest extends PHPUnit\Framework\TestCase
 {
 
     /**
-     * @var \src\Cart
+     * @var Mohamadtsn\ShoppingCart\Cart
      */
     protected $cart;
 
     public function setUp(): void
     {
-        $events = m::mock('Illuminate\Contracts\Events\Dispatcher');
+        $events = m::mock(Dispatcher::class);
         $events->shouldReceive('dispatch');
 
         $this->cart = new Cart(
@@ -55,7 +58,7 @@ class CartConditionTest extends PHPUnit\Framework\TestCase
 
         $this->assertEquals(182.49, $this->cart->getSubTotal());
 
-        // the total is also should be the same with sub total since our getTotal
+        // the total is also should be the same with sub-total since our getTotal
         // also depends on what is the value of subtotal
         $this->assertEquals(182.49, $this->cart->getTotal());
     }
@@ -270,7 +273,7 @@ class CartConditionTest extends PHPUnit\Framework\TestCase
 
         $this->cart->add($item);
 
-        $this->assertEquals(95, $this->cart->get(456)->getPriceSumWithConditions());
+        $this->assertEquals(95, $this->cart->get($item['id'])->getPriceSumWithConditions());
         $this->assertEquals(95, $this->cart->getSubTotal());
     }
 
@@ -499,13 +502,13 @@ class CartConditionTest extends PHPUnit\Framework\TestCase
         $this->cart->add($item);
 
         // let's very first the item has 2 conditions in it
-        $this->assertCount(2, $this->cart->get(456)['conditions'], 'Item should have two conditions');
+        $this->assertCount(2, $this->cart->get($item['id'])->conditions, 'Item should have two conditions');
 
         // now let's remove a condition on that item using the condition name
-        $this->cart->removeItemCondition(456, 'SALE 5%');
+        $this->cart->removeItemCondition($item['id'], 'SALE 5%');
 
         // now we should have only 1 condition left on that item
-        $this->assertCount(1, $this->cart->get(456)['conditions'], 'Item should have one condition left');
+        $this->assertCount(1, $this->cart->get($item['id'])->conditions, 'Item should have one condition left');
     }
 
     public function test_remove_item_condition_by_condition_name_scenario_two()

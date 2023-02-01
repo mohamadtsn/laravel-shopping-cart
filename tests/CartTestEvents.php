@@ -6,10 +6,10 @@
  * Time: 3:20 PM
  */
 
-use src\Cart;
+use Mohamadtsn\ShoppingCart\Cart;
 use Mockery as m;
+use Tests\Helpers\SessionMock;
 
-require_once __DIR__ . '/helpers/SessionMock.php';
 
 class CartTestEvents extends PHPUnit\Framework\TestCase
 {

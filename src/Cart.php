@@ -2,6 +2,7 @@
 
 namespace Mohamadtsn\ShoppingCart;
 
+use Mohamadtsn\ShoppingCart\CartCondition;
 use Mohamadtsn\ShoppingCart\Contracts\CartItemAbstract;
 use Mohamadtsn\ShoppingCart\Exceptions\InvalidConditionException;
 use Mohamadtsn\ShoppingCart\Exceptions\InvalidItemException;
@@ -9,7 +10,6 @@ use Mohamadtsn\ShoppingCart\Exceptions\UnknownModelException;
 use Mohamadtsn\ShoppingCart\ItemCollection;
 use Mohamadtsn\ShoppingCart\Validators\CartItemValidator;
 use Mohamadtsn\ShoppingCart\CartCollection;
-use Mohamadtsn\ShoppingCart\CartCondition;
 use Mohamadtsn\ShoppingCart\CartConditionCollection;
 use Mohamadtsn\ShoppingCart\ItemAttributeCollection;
 
@@ -72,24 +72,29 @@ class Cart
     /**
      * This holds the currently added item id in cart for association
      *
-     * @var
+     * @var CartItemAbstract|null
      */
     protected $currentItemId;
 
     /**
      * This holds the cart items item in cart for association
      *
-     * @var
+     * @var CartCollection|CartItemAbstract[]|null
      */
     protected $cartItems;
 
     /**
      * This holds the cart conditions item in cart for association
      *
-     * @var
+     * @var CartConditionCollection|CartCondition[]|null
      */
     protected $cartConditions;
 
+    /**
+     * This holds the cart conditions item in cart for association
+     *
+     * @var string
+     */
     protected $itemClass;
 
     /**
@@ -117,10 +122,10 @@ class Cart
 
     /**
      * @param $name
-     * @param array $value
+     * @param mixed $value
      * @return mixed
      */
-    protected function fireEvent($name, array $value = [])
+    protected function fireEvent($name, $value = [])
     {
         return $this->events->dispatch($this->getInstanceName() . '.' . $name, array_values([$value, $this]), true);
     }
@@ -214,7 +219,7 @@ class Cart
             'conditions' => $conditions,
         ];
 
-        if (isset($associatedModel) && $associatedModel != '') {
+        if (!empty($associatedModel)) {
             $data['associatedModel'] = $associatedModel;
         }
 
@@ -380,7 +385,7 @@ class Cart
     protected function save(CartCollection $cart)
     {
         $this->session->put($this->sessionKeyCartItems, $cart);
-        $this->setCartItems();
+        $this->setCartItems($cart);
     }
 
     /**
@@ -410,32 +415,31 @@ class Cart
     /**
      * add condition on an existing item on the cart
      *
-     * @param int|string $productId
+     * @param int|string $itemId
      * @param CartCondition $itemCondition
      * @return $this
      */
-    public function addItemCondition($productId, $itemCondition)
+    public function addItemCondition($itemId, $itemCondition)
     {
-        if ($product = $this->get($productId)) {
-            $conditionInstance = CartCondition::class;
+        if ($itemCondition instanceof (CartCondition::class) && ($item = $this->get($itemId))) {
+            // we need to copy first to a temporary variable to hold the conditions
+            // to avoid hitting this error "Indirect modification of overloaded element of Mohamadtsn\ShoppingCart\ItemCollection has no effect"
+            // this is due to laravel Collection instance that implements Array Access
+            // // see link for more info: http://stackoverflow.com/questions/20053269/indirect-modification-of-overloaded-element-of-splfixedarray-has-no-effect
+            $itemConditionTempHolder = $item['conditions'];
 
-            if ($itemCondition instanceof $conditionInstance) {
-                // we need to copy first to a temporary variable to hold the conditions
-                // to avoid hitting this error "Indirect modification of overloaded element of Mohamadtsn\ShoppingCart\ItemCollection has no effect"
-                // this is due to laravel Collection instance that implements Array Access
-                // // see link for more info: http://stackoverflow.com/questions/20053269/indirect-modification-of-overloaded-element-of-splfixedarray-has-no-effect
-                $itemConditionTempHolder = $product['conditions'];
-
-                if (is_array($itemConditionTempHolder)) {
-                    $itemConditionTempHolder[] = $itemCondition;
-                } else {
-                    $itemConditionTempHolder = $itemCondition;
-                }
-
-                $this->update($productId, [
-                    'conditions' => $itemConditionTempHolder, // the newly updated conditions
-                ]);
+            if (is_array($itemConditionTempHolder)) {
+                $itemConditionTempHolder[] = $itemCondition;
+            } else {
+                $itemConditionTempHolder = $itemCondition;
             }
+
+            $this->update($itemId, [
+                'conditions' => $itemConditionTempHolder, // the newly updated conditions
+            ]);
+            $item['conditions'] = $itemConditionTempHolder;
+
+            $this->updateCartItems($item);
         }
 
         return $this;
@@ -478,6 +482,7 @@ class Cart
             []
         );
 
+        $this->setCartItems([]);
         $this->fireEvent('cleared');
         return true;
     }
@@ -499,19 +504,21 @@ class Cart
             return $this;
         }
 
-        if (!$condition instanceof CartCondition) throw new InvalidConditionException('Argument 1 must be an instance of \'Mohamadtsn\ShoppingCart\CartCondition\'');
+        if (!$condition instanceof CartCondition) {
+            throw new InvalidConditionException('Argument 1 must be an instance of \'Mohamadtsn\ShoppingCart\CartCondition\'');
+        }
 
         $conditions = $this->getConditions();
 
         // Check if order has been applied
-        if ($condition->getOrder() == 0) {
+        if ($condition->getOrder() === 0) {
             $last = $conditions->last();
-            $condition->setOrder(!is_null($last) ? $last->getOrder() + 1 : 1);
+            $condition->setOrder(!is_null($last) ? ($last->getOrder() + 1) : 1);
         }
 
         $conditions->put($condition->getName(), $condition);
 
-        $conditions = $conditions->sortBy(function ($condition, $key) {
+        $conditions = $conditions->sortBy(function ($condition) {
             return $condition->getOrder();
         });
 
@@ -538,7 +545,7 @@ class Cart
     protected function saveConditions($conditions)
     {
         $this->session->put($this->sessionKeyCartConditions, $conditions);
-        $this->setCartConditions();
+        $this->setCartConditions($conditions);
     }
 
     /**
@@ -578,7 +585,7 @@ class Cart
     public function getConditionsByType($type)
     {
         return $this->getConditions()->filter(function (CartCondition $condition) use ($type) {
-            return $condition->getType() == $type;
+            return (string)$condition->getType() === (string)$type;
         });
     }
 
@@ -622,13 +629,12 @@ class Cart
             // see link for more info: http://stackoverflow.com/questions/20053269/indirect-modification-of-overloaded-element-of-splfixedarray-has-no-effect
 
             $tempConditionsHolder = $item['conditions'];
-
             // if the item's conditions is in array format
             // we will iterate through all of it and check if the name matches
             // to the given name the user wants to remove, if so, remove it
             if (is_array($tempConditionsHolder)) {
                 foreach ($tempConditionsHolder as $k => $condition) {
-                    if ($condition->getName() == $conditionName) {
+                    if ((string)$condition->getName() === (string)$conditionName) {
                         unset($tempConditionsHolder[$k]);
                     }
                 }
@@ -640,14 +646,8 @@ class Cart
             // an instance of a Condition, if so, we will check if the name matches
             // on the given condition name the user wants to remove, if so,
             // lets just make $item['conditions'] an empty array as there's just 1 condition on it anyway
-            else {
-                $conditionInstance = "Darryldecode\\Cart\\CartCondition";
-
-                if ($item['conditions'] instanceof $conditionInstance) {
-                    if ($tempConditionsHolder->getName() == $conditionName) {
-                        $item['conditions'] = [];
-                    }
-                }
+            else if (($item['conditions'] instanceof (CartCondition::class)) && (string)$tempConditionsHolder->getName() === (string)$conditionName) {
+                $item['conditions'] = [];
             }
         }
 
@@ -655,28 +655,28 @@ class Cart
             'conditions' => $item['conditions'],
         ]);
 
+        $this->updateCartItems($item);
+
         return true;
     }
 
     /**
      * check if an item has condition
      *
-     * @param $item
+     * @param CartItemAbstract $item
      * @return bool
      */
     protected function itemHasConditions($item)
     {
-        if (!isset($item['conditions'])) return false;
-
-        if (is_array($item['conditions'])) {
-            return count($item['conditions']) > 0;
+        if (!isset($item['conditions'])) {
+            return false;
         }
 
-        $conditionInstance = "Darryldecode\\Cart\\CartCondition";
+        if (is_array($item->conditions)) {
+            return count($item->conditions) > 0;
+        }
 
-        if ($item['conditions'] instanceof $conditionInstance) return true;
-
-        return false;
+        return $item->conditions instanceof (CartCondition::class);
     }
 
     /**
@@ -687,13 +687,16 @@ class Cart
      */
     public function clearItemConditions($itemId)
     {
-        if (!$item = $this->getContent()->get($itemId)) {
+        if (!($item = $this->getContent()->get($itemId))) {
             return false;
         }
 
         $this->update($itemId, [
             'conditions' => [],
         ]);
+        $item['conditions'] = [];
+
+        $this->updateCartItems($item);
 
         return true;
     }
@@ -711,6 +714,7 @@ class Cart
             $this->sessionKeyCartConditions,
             []
         );
+        $this->setCartConditions([]);
     }
 
     /**
@@ -806,7 +810,7 @@ class Cart
             $process++;
         });
 
-        return formatValue((float)$newTotal, $formatted, $this->config);
+        return formatValue($newTotal, $formatted, $this->config);
     }
 
     /**
@@ -868,7 +872,7 @@ class Cart
      * @return Cart
      * @throws UnknownModelException
      */
-    public function associate($model)
+    public function associate($model): self
     {
         if (is_string($model) && !class_exists($model)) {
             throw new UnknownModelException("The supplied model {$model} does not exist.");
@@ -889,12 +893,19 @@ class Cart
 
     protected function setCartItems($cart_items = null)
     {
-        if ($cart_items) {
+        if (!is_bool($cart_items) && !is_null($cart_items)) {
             $this->cartItems = $cart_items;
-        } else if (empty($this->cartItems)) {
+        } else if (empty($this->cartItems) || $cart_items === true) {
             $this->cartItems = $this->session->get($this->sessionKeyCartItems);
         }
 
+        return $this;
+    }
+
+    protected function updateCartItems(CartItemAbstract $item)
+    {
+        $this->cartItems->pull($item->id);
+        $this->cartItems->put($item->id, $item);
         return $this;
     }
 
@@ -902,7 +913,7 @@ class Cart
      * get an item on a cart by item ID
      *
      * @param $itemId
-     * @return mixed
+     * @return CartItemAbstract|ItemCollection|null
      */
     public function get($itemId)
     {
@@ -914,7 +925,7 @@ class Cart
      *
      * @return CartCollection
      */
-    public function getContent()
+    public function getContent(): CartCollection
     {
         return (new CartCollection($this->cartItems))->reject(function ($item) {
             return !($item instanceof CartItemAbstract);
@@ -923,9 +934,9 @@ class Cart
 
     protected function setCartConditions($cart_conditions = null)
     {
-        if ($cart_conditions) {
+        if (!is_bool($cart_conditions) && !is_null($cart_conditions)) {
             $this->cartConditions = $cart_conditions;
-        } else if (empty($this->cartConditions)) {
+        } else if (empty($this->cartConditions) || $cart_conditions === true) {
             $this->cartConditions = $this->session->get($this->sessionKeyCartConditions);
         }
     }

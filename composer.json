@@ -32,6 +32,12 @@
       "src/Tools/helpers.php"
     ]
   },
+  "autoload-dev": {
+    "psr-4": {
+      "Tests\\": "tests/",
+      "Tests\\Helpers\\": "tests/helpers/"
+    }
+  },
   "minimum-stability": "dev",
   "extra": {
     "laravel": {
