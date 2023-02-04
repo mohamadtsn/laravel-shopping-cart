@@ -3,6 +3,7 @@
 namespace Tests\Helpers;
 
 use Illuminate\Contracts\Database\ModelIdentifier;
+use Illuminate\Support\Collection;
 
 class MockProduct extends ModelIdentifier
 {
@@ -84,5 +85,15 @@ class MockProduct extends ModelIdentifier
     public function find($id)
     {
         return $this;
+    }
+
+    public function whereIn()
+    {
+        return $this;
+    }
+
+    public function get()
+    {
+        return new Collection([collect(($this))]);
     }
 }

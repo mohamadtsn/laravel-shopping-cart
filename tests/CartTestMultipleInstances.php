@@ -1,32 +1,19 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: darryl
- * Date: 1/16/2015
- * Time: 1:45 PM
- */
 
+use Illuminate\Contracts\Events\Dispatcher;
 use Mohamadtsn\ShoppingCart\Cart;
-use Mockery as m;
 use Tests\Helpers\SessionMock;
 
 
 class CartTestMultipleInstances extends PHPUnit\Framework\TestCase
 {
+    protected Cart $cart1;
 
-    /**
-     * @var Mohamadtsn\ShoppingCart\Cart
-     */
-    protected $cart1;
-
-    /**
-     * @var Mohamadtsn\ShoppingCart\Cart
-     */
-    protected $cart2;
+    protected Cart $cart2;
 
     public function setUp(): void
     {
-        $events = m::mock('Illuminate\Contracts\Events\Dispatcher');
+        $events = Mockery::mock(Dispatcher::class);
         $events->shouldReceive('dispatch');
 
         $this->cart1 = new Cart(
@@ -48,7 +35,7 @@ class CartTestMultipleInstances extends PHPUnit\Framework\TestCase
 
     public function tearDown(): void
     {
-        m::close();
+        Mockery::close();
     }
 
     public function test_cart_multiple_instances()

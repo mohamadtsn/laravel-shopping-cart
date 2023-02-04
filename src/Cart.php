@@ -2,6 +2,7 @@
 
 namespace Mohamadtsn\ShoppingCart;
 
+use Illuminate\Database\Eloquent\Model;
 use Mohamadtsn\ShoppingCart\CartCondition;
 use Mohamadtsn\ShoppingCart\Contracts\CartItemAbstract;
 use Mohamadtsn\ShoppingCart\Exceptions\InvalidConditionException;
@@ -98,6 +99,20 @@ class Cart
     protected $itemClass;
 
     /**
+     * This holds the cart conditions item in cart for association
+     *
+     * @var array
+     */
+    public array $cacheModels;
+
+    /**
+     * This holds the cart conditions item in cart for association
+     *
+     * @var array
+     */
+    public bool $endSaveAllItems = true;
+
+    /**
      * our object constructor
      *
      * @param $session
@@ -160,6 +175,8 @@ class Cart
         $this->setCartItems();
         $this->setCartConditions();
 
+        $this->initializeCacheItemModel();
+
         return $this;
     }
 
@@ -184,6 +201,7 @@ class Cart
             // the first argument is an array, now we will need to check if it is a multidimensional
             // array, if so, we will iterate through each item and call add again
             if (isMultiArray($id)) {
+                $this->endSaveAllItems = false;
                 foreach ($id as $item) {
                     $this->add(
                         $item['id'],
@@ -195,6 +213,7 @@ class Cart
                         issetAndHasValueOrAssignDefault($item['associatedModel'], null)
                     );
                 }
+                $this->endSaveAllItems = true;
             } else {
                 $this->add(
                     $id['id'],
@@ -217,6 +236,7 @@ class Cart
             'quantity' => $quantity,
             'attributes' => new ItemAttributeCollection($attributes),
             'conditions' => $conditions,
+            'instance_name' => $this->getInstanceName(),
         ];
 
         if (!empty($associatedModel)) {
@@ -289,7 +309,7 @@ class Cart
      * of the item you want to update on it
      * @return bool
      */
-    public function update($id, $data)
+    public function update($id, array $data)
     {
         if ($this->fireEvent('updating', $data) === false) {
             return false;
@@ -321,7 +341,11 @@ class Cart
                     $item = $this->updateQuantityRelative($item, $key, $value);
                 }
             } else if ($key === 'attributes') {
-                $item[$key] = new ItemAttributeCollection($value);
+                if (($attributes = $item[$key]) instanceof ItemAttributeCollection) {
+                    $item[$key] = $attributes->merge($value);
+                } else {
+                    $item[$key] = new ItemAttributeCollection($value);
+                }
             } else {
                 $item[$key] = $value;
             }
@@ -727,7 +751,7 @@ class Cart
         $cart = $this->getContent();
 
         $sum = $cart->sum(function ($item) {
-            return $item->getPriceSum();
+            return $item->getPriceSum(false);
         });
 
         return formatValue((float)$sum, $formatted, $this->config);
@@ -899,6 +923,8 @@ class Cart
             $this->cartItems = $this->session->get($this->sessionKeyCartItems);
         }
 
+        $this->endSaveAllItems && $this->initializeCacheItemModel();
+
         return $this;
     }
 
@@ -927,9 +953,41 @@ class Cart
      */
     public function getContent(): CartCollection
     {
+        $this->initializeCacheItemModel();
         return (new CartCollection($this->cartItems))->reject(function ($item) {
             return !($item instanceof CartItemAbstract);
         });
+    }
+
+    public function initializeCacheItemModel()
+    {
+        if (empty($this->cartItems) || !empty($this->cacheModels)) {
+            return false;
+        }
+
+        $prepare_for_cache = $this->cartItems
+            ->reject(fn($item) => !$item->has('associatedModel'))
+            ->groupBy('associatedModel');
+
+        $this->storeItemModelToCache($prepare_for_cache);
+    }
+
+    public function storeItemModelToCache(CartCollection $items)
+    {
+        if ($items->isEmpty()) {
+            return false;
+        }
+        $items->each(function ($item, $associated_model) {
+            $models = with(new $associated_model())->whereIn('id', $item->pluck('id')->toarray())->get();
+            if ($models->isNotEmpty()) {
+                $models->each(fn($model) => $this->cacheModels[$associated_model][$model->id] = $model);
+            }
+        });
+    }
+
+    public function getModelFromCache($associatedModel, $item_id)
+    {
+        return $this->cacheModels[$associatedModel][$item_id] ?? null;
     }
 
     protected function setCartConditions($cart_conditions = null)

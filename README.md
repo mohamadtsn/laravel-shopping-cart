@@ -1,8 +1,8 @@
 # Laravel Shopping Cart
 
-[![Build Status](https://travis-ci.org/darryldecode/laravelshoppingcart.svg?branch=master)](https://travis-ci.org/darryldecode/laravelshoppingcart)
-[![Total Downloads](https://poser.pugx.org/darryldecode/cart/d/total.svg)](https://packagist.org/packages/darryldecode/cart)
-[![License](https://poser.pugx.org/darryldecode/cart/license.svg)](https://packagist.org/packages/darryldecode/cart)
+[![Latest Stable Version](http://poser.pugx.org/mohamadtsn/laravel-shopping-cart/v)](https://packagist.org/packages/mohamadtsn/laravel-shopping-cart)
+[![License](http://poser.pugx.org/mohamadtsn/laravel-shopping-cart/license)](https://packagist.org/packages/mohamadtsn/laravel-shopping-cart)
+[![PHP Version Require](http://poser.pugx.org/mohamadtsn/laravel-shopping-cart/require/php)](https://packagist.org/packages/mohamadtsn/laravel-shopping-cart)
 
 A Shopping Cart Implementation for Laravel Framework
 
@@ -10,13 +10,9 @@ A Shopping Cart Implementation for Laravel Framework
 
 Install the package through [Composer](http://getcomposer.org/).
 
-For Laravel 5.1~:
-`composer require "darryldecode/cart:~2.0"`
-
-For Laravel 5.5, 5.6, or 5.7~:
-
-```composer require "darryldecode/cart:~4.0"``` or
-```composer require "darryldecode/cart"```
+```bash
+composer require mohamadtsn/laravel-shopping-cart
+```
 
 ## CONFIGURATION
 

@@ -1,33 +1,26 @@
 <?php
 
 use Illuminate\Contracts\Events\Dispatcher;
+use Imanghafoori\EloquentMockery\FakeDB;
 use Mohamadtsn\ShoppingCart\Exceptions\InvalidItemException;
 use Mohamadtsn\ShoppingCart\ItemAttributeCollection;
-
-/**
- * Created by PhpStorm.
- * User: darryl
- * Date: 1/12/2015
- * Time: 9:59 PM
- */
-
 use Mohamadtsn\ShoppingCart\Cart;
-use Mockery as m;
-use Tests\Helpers\MockProduct;
+use PHPUnit\Framework\TestCase;
+use Tests\Helpers\Models\Product;
 use Tests\Helpers\SessionMock;
 
-
-class CartTest extends PHPUnit\Framework\TestCase
+class CartTest extends TestCase
 {
 
     /**
-     * @var Mohamadtsn\ShoppingCart\Cart
+     * @var Cart
      */
-    protected $cart;
+    protected Cart $cart;
 
     public function setUp(): void
     {
-        $events = m::mock(Dispatcher::class);
+        FakeDB::mockQueryBuilder();
+        $events = Mockery::mock(Dispatcher::class);
         $events->shouldReceive('dispatch');
 
         $this->cart = new Cart(
@@ -37,11 +30,13 @@ class CartTest extends PHPUnit\Framework\TestCase
             'SAMPLESESSIONKEY',
             require(__DIR__ . '/helpers/configMock.php')
         );
+        app()->make('shopping', $this->cart);
     }
 
     public function tearDown(): void
     {
-        m::close();
+        FakeDB::dontMockQueryBuilder();
+        Mockery::close();
     }
 
     public function test_cart_can_add_item()
@@ -503,8 +498,14 @@ class CartTest extends PHPUnit\Framework\TestCase
             'price' => 67.99,
             'quantity' => 4,
             'attributes' => [],
-            'associatedModel' => MockProduct::class,
+            'associatedModel' => Product::class,
         ];
+        FakeDB::addRow('products', [
+            'id' => 456,
+            'name' => 'Sample Item',
+            'price' => 67.99,
+            'stock' => 4,
+        ]);
 
         $this->cart->add($item);
 
@@ -514,7 +515,7 @@ class CartTest extends PHPUnit\Framework\TestCase
         $this->assertEquals(1, $this->cart->getContent()->count(), 'Cart should have 1 item on it');
         $this->assertEquals(456, $this->cart->getContent()->first()['id'], 'The first content must have ID of 456');
         $this->assertEquals('Sample Item', $this->cart->getContent()->first()['name'], 'The first content must have name of "Sample Item"');
-        $this->assertInstanceOf(MockProduct::class, $addedItem->model);
+        $this->assertInstanceOf(Product::class, $addedItem->model);
     }
 
     public function test_cart_can_add_items_with_multidimensional_array_with_associated_model()
@@ -526,7 +527,7 @@ class CartTest extends PHPUnit\Framework\TestCase
                 'price' => 67.99,
                 'quantity' => 4,
                 'attributes' => [],
-                'associatedModel' => MockProduct::class,
+                'associatedModel' => Product::class,
             ],
             [
                 'id' => 568,
@@ -534,7 +535,7 @@ class CartTest extends PHPUnit\Framework\TestCase
                 'price' => 69.25,
                 'quantity' => 4,
                 'attributes' => [],
-                'associatedModel' => MockProduct::class,
+                'associatedModel' => Product::class,
             ],
             [
                 'id' => 856,
@@ -542,15 +543,22 @@ class CartTest extends PHPUnit\Framework\TestCase
                 'price' => 50.25,
                 'quantity' => 4,
                 'attributes' => [],
-                'associatedModel' => MockProduct::class,
+                'associatedModel' => Product::class,
             ],
         ];
+
+        foreach ($items as $item) {
+            $item['stock'] = 4;
+            unset($item['quantity'], $item['attributes'], $item['associatedModel']);
+            FakeDB::addRow('products', $item);
+        }
 
         $this->cart->add($items);
 
         $content = $this->cart->getContent();
+        dd();
         foreach ($content as $item) {
-            $this->assertInstanceOf(MockProduct::class, $item->model);
+            $this->assertInstanceOf(Product::class, $item->model);
         }
 
         $this->assertFalse($this->cart->isEmpty(), 'Cart should not be empty');

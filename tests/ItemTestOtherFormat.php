@@ -1,28 +1,17 @@
-<?php use Illuminate\Contracts\Events\Dispatcher;
+<?php
 
-/**
- * Created by PhpStorm.
- * User: darryl
- * Date: 3/18/2015
- * Time: 6:17 PM
- */
-
+use Illuminate\Contracts\Events\Dispatcher;
 use Mohamadtsn\ShoppingCart\Cart;
-use Mockery as m;
 use Tests\Helpers\SessionMock;
 
 
 class ItemTestOtherFormat extends PHPUnit\Framework\TestCase
 {
-
-    /**
-     * @var Mohamadtsn\ShoppingCart\Cart
-     */
-    protected $cart;
+    protected Cart $cart;
 
     public function setUp(): void
     {
-        $events = m::mock(Dispatcher::class);
+        $events = Mockery::mock(Dispatcher::class);
         $events->shouldReceive('dispatch');
 
         $this->cart = new Cart(
@@ -36,7 +25,7 @@ class ItemTestOtherFormat extends PHPUnit\Framework\TestCase
 
     public function tearDown(): void
     {
-        m::close();
+        Mockery::close();
     }
 
     public function test_item_get_sum_price_using_property()

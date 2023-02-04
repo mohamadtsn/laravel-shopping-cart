@@ -1,14 +1,6 @@
 <?php
 
 use Illuminate\Contracts\Events\Dispatcher;
-
-/**
- * Created by PhpStorm.
- * User: darryl
- * Date: 1/12/2015
- * Time: 9:59 PM
- */
-
 use Mohamadtsn\ShoppingCart\Cart;
 use Mohamadtsn\ShoppingCart\CartCondition;
 use Mockery as m;
@@ -17,15 +9,11 @@ use Tests\Helpers\SessionMock;
 
 class CartConditionTest extends PHPUnit\Framework\TestCase
 {
-
-    /**
-     * @var Mohamadtsn\ShoppingCart\Cart
-     */
-    protected $cart;
+    protected Cart $cart;
 
     public function setUp(): void
     {
-        $events = m::mock(Dispatcher::class);
+        $events = Mockery::mock(Dispatcher::class);
         $events->shouldReceive('dispatch');
 
         $this->cart = new Cart(
@@ -39,7 +27,7 @@ class CartConditionTest extends PHPUnit\Framework\TestCase
 
     public function tearDown(): void
     {
-        m::close();
+        Mockery::close();
     }
 
     public function test_subtotal()

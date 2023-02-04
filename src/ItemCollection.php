@@ -18,7 +18,6 @@ use Mohamadtsn\ShoppingCart\Contracts\CartItemAbstract;
 class ItemCollection extends CartItemAbstract
 {
     protected $config;
-    protected $model;
 
     /**
      * ItemCollection constructor.
@@ -30,13 +29,11 @@ class ItemCollection extends CartItemAbstract
         parent::__construct($items);
 
         $this->config = $config;
-
-        $this->model = $this->getAssociatedModel();
     }
 
     public function getPriceSum(bool $formatted = true)
     {
-        return formatValue($this->price * $this->quantity, $this->config['format_numbers'], $this->config);
+        return formatValue($this->price * $this->quantity, $formatted, $this->config);
     }
 
     public function __get($key)
@@ -44,7 +41,7 @@ class ItemCollection extends CartItemAbstract
         if ($key === 'model' || $this->has($key)) {
             return !is_null($this->get($key)) ? $this->get($key) : $this->getAssociatedModel();
         }
-        return null;
+        return parent::__get($key);
     }
 
     protected function getAssociatedModel()
@@ -55,10 +52,7 @@ class ItemCollection extends CartItemAbstract
 
         $associatedModel = $this->get('associatedModel');
 
-        if (!empty($this->model)) {
-            return $this->model;
-        }
-        return with(new $associatedModel())->find($this->get('id'));
+        return \app($this->get('instance_name'))->getModelFromCache($associatedModel, $this->get('id'));
     }
 
     /**

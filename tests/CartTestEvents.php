@@ -1,20 +1,14 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: darryl
- * Date: 1/16/2015
- * Time: 3:20 PM
- */
 
+use Illuminate\Contracts\Events\Dispatcher;
 use Mohamadtsn\ShoppingCart\Cart;
-use Mockery as m;
 use Tests\Helpers\SessionMock;
 
 
 class CartTestEvents extends PHPUnit\Framework\TestCase
 {
 
-    const CART_INSTANCE_NAME = 'shopping';
+    public const CART_INSTANCE_NAME = 'shopping';
 
     public function setUp(): void
     {
@@ -22,13 +16,13 @@ class CartTestEvents extends PHPUnit\Framework\TestCase
 
     public function tearDown(): void
     {
-        m::close();
+        Mockery::close();
     }
 
     public function test_event_cart_created()
     {
-        $events = m::mock('Illuminate\Contracts\Events\Dispatcher');
-        $events->shouldReceive('dispatch')->once()->with(self::CART_INSTANCE_NAME . '.created', m::type('array'), true);
+        $events = Mockery::mock(Dispatcher::class);
+        $events->shouldReceive('dispatch')->once()->with(self::CART_INSTANCE_NAME . '.created', Mockery::type('array'), true);
 
         $cart = new Cart(
             new SessionMock(),
@@ -43,10 +37,10 @@ class CartTestEvents extends PHPUnit\Framework\TestCase
 
     public function test_event_cart_adding()
     {
-        $events = m::mock('Illuminate\Events\Dispatcher');
-        $events->shouldReceive('dispatch')->once()->with(self::CART_INSTANCE_NAME . '.created', m::type('array'), true);
-        $events->shouldReceive('dispatch')->once()->with(self::CART_INSTANCE_NAME . '.adding', m::type('array'), true);
-        $events->shouldReceive('dispatch')->once()->with(self::CART_INSTANCE_NAME . '.added', m::type('array'), true);
+        $events = Mockery::mock(\Illuminate\Events\Dispatcher::class);
+        $events->shouldReceive('dispatch')->once()->with(self::CART_INSTANCE_NAME . '.created', Mockery::type('array'), true);
+        $events->shouldReceive('dispatch')->once()->with(self::CART_INSTANCE_NAME . '.adding', Mockery::type('array'), true);
+        $events->shouldReceive('dispatch')->once()->with(self::CART_INSTANCE_NAME . '.added', Mockery::type('array'), true);
 
         $cart = new Cart(
             new SessionMock(),
@@ -63,10 +57,10 @@ class CartTestEvents extends PHPUnit\Framework\TestCase
 
     public function test_event_cart_adding_multiple_times()
     {
-        $events = m::mock('Illuminate\Events\Dispatcher');
-        $events->shouldReceive('dispatch')->once()->with(self::CART_INSTANCE_NAME . '.created', m::type('array'), true);
-        $events->shouldReceive('dispatch')->times(2)->with(self::CART_INSTANCE_NAME . '.adding', m::type('array'), true);
-        $events->shouldReceive('dispatch')->times(2)->with(self::CART_INSTANCE_NAME . '.added', m::type('array'), true);
+        $events = Mockery::mock(\Illuminate\Events\Dispatcher::class);
+        $events->shouldReceive('dispatch')->once()->with(self::CART_INSTANCE_NAME . '.created', Mockery::type('array'), true);
+        $events->shouldReceive('dispatch')->times(2)->with(self::CART_INSTANCE_NAME . '.adding', Mockery::type('array'), true);
+        $events->shouldReceive('dispatch')->times(2)->with(self::CART_INSTANCE_NAME . '.added', Mockery::type('array'), true);
 
         $cart = new Cart(
             new SessionMock(),
@@ -84,10 +78,10 @@ class CartTestEvents extends PHPUnit\Framework\TestCase
 
     public function test_event_cart_adding_multiple_times_scenario_two()
     {
-        $events = m::mock('Illuminate\Events\Dispatcher');
-        $events->shouldReceive('dispatch')->once()->with(self::CART_INSTANCE_NAME . '.created', m::type('array'), true);
-        $events->shouldReceive('dispatch')->times(3)->with(self::CART_INSTANCE_NAME . '.adding', m::type('array'), true);
-        $events->shouldReceive('dispatch')->times(3)->with(self::CART_INSTANCE_NAME . '.added', m::type('array'), true);
+        $events = Mockery::mock(\Illuminate\Events\Dispatcher::class);
+        $events->shouldReceive('dispatch')->once()->with(self::CART_INSTANCE_NAME . '.created', Mockery::type('array'), true);
+        $events->shouldReceive('dispatch')->times(3)->with(self::CART_INSTANCE_NAME . '.adding', Mockery::type('array'), true);
+        $events->shouldReceive('dispatch')->times(3)->with(self::CART_INSTANCE_NAME . '.added', Mockery::type('array'), true);
 
         $items = [
             [
@@ -128,12 +122,12 @@ class CartTestEvents extends PHPUnit\Framework\TestCase
 
     public function test_event_cart_remove_item()
     {
-        $events = m::mock('Illuminate\Events\Dispatcher');
-        $events->shouldReceive('dispatch')->once()->with(self::CART_INSTANCE_NAME . '.created', m::type('array'), true);
-        $events->shouldReceive('dispatch')->times(3)->with(self::CART_INSTANCE_NAME . '.adding', m::type('array'), true);
-        $events->shouldReceive('dispatch')->times(3)->with(self::CART_INSTANCE_NAME . '.added', m::type('array'), true);
-        $events->shouldReceive('dispatch')->times(1)->with(self::CART_INSTANCE_NAME . '.removing', m::type('array'), true);
-        $events->shouldReceive('dispatch')->times(1)->with(self::CART_INSTANCE_NAME . '.removed', m::type('array'), true);
+        $events = Mockery::mock(\Illuminate\Events\Dispatcher::class);
+        $events->shouldReceive('dispatch')->once()->with(self::CART_INSTANCE_NAME . '.created', Mockery::type('array'), true);
+        $events->shouldReceive('dispatch')->times(3)->with(self::CART_INSTANCE_NAME . '.adding', Mockery::type('array'), true);
+        $events->shouldReceive('dispatch')->times(3)->with(self::CART_INSTANCE_NAME . '.added', Mockery::type('array'), true);
+        $events->shouldReceive('dispatch')->times(1)->with(self::CART_INSTANCE_NAME . '.removing', Mockery::type('array'), true);
+        $events->shouldReceive('dispatch')->times(1)->with(self::CART_INSTANCE_NAME . '.removed', Mockery::type('array'), true);
 
         $items = [
             [
@@ -176,12 +170,12 @@ class CartTestEvents extends PHPUnit\Framework\TestCase
 
     public function test_event_cart_clear()
     {
-        $events = m::mock('Illuminate\Events\Dispatcher');
-        $events->shouldReceive('dispatch')->once()->with(self::CART_INSTANCE_NAME . '.created', m::type('array'), true);
-        $events->shouldReceive('dispatch')->times(3)->with(self::CART_INSTANCE_NAME . '.adding', m::type('array'), true);
-        $events->shouldReceive('dispatch')->times(3)->with(self::CART_INSTANCE_NAME . '.added', m::type('array'), true);
-        $events->shouldReceive('dispatch')->once()->with(self::CART_INSTANCE_NAME . '.clearing', m::type('array'), true);
-        $events->shouldReceive('dispatch')->once()->with(self::CART_INSTANCE_NAME . '.cleared', m::type('array'), true);
+        $events = Mockery::mock(\Illuminate\Events\Dispatcher::class);
+        $events->shouldReceive('dispatch')->once()->with(self::CART_INSTANCE_NAME . '.created', Mockery::type('array'), true);
+        $events->shouldReceive('dispatch')->times(3)->with(self::CART_INSTANCE_NAME . '.adding', Mockery::type('array'), true);
+        $events->shouldReceive('dispatch')->times(3)->with(self::CART_INSTANCE_NAME . '.added', Mockery::type('array'), true);
+        $events->shouldReceive('dispatch')->once()->with(self::CART_INSTANCE_NAME . '.clearing', Mockery::type('array'), true);
+        $events->shouldReceive('dispatch')->once()->with(self::CART_INSTANCE_NAME . '.cleared', Mockery::type('array'), true);
 
         $items = [
             [

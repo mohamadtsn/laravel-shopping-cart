@@ -1,18 +1,9 @@
 <?php
 
 use Illuminate\Contracts\Events\Dispatcher;
-
-/**
- * Created by PhpStorm.
- * User: darryl
- * Date: 3/18/2015
- * Time: 6:17 PM
- */
-
 use Mohamadtsn\ShoppingCart\Cart;
-use Mockery as m;
 use Mohamadtsn\ShoppingCart\CartCondition;
-use Tests\Helpers\MockProduct;
+use Tests\Helpers\Models\Product;
 use Tests\Helpers\SessionMock;
 
 
@@ -26,7 +17,7 @@ class ItemTest extends PHPUnit\Framework\TestCase
 
     public function setUp(): void
     {
-        $events = m::mock(Dispatcher::class);
+        $events = Mockery::mock(Dispatcher::class);
         $events->shouldReceive('dispatch');
 
         $this->cart = new Cart(
@@ -40,7 +31,7 @@ class ItemTest extends PHPUnit\Framework\TestCase
 
     public function tearDown(): void
     {
-        m::close();
+        Mockery::close();
     }
 
     public function test_item_get_sum_price_using_property()
@@ -95,11 +86,11 @@ class ItemTest extends PHPUnit\Framework\TestCase
 
     public function test_item_associate_model()
     {
-        $this->cart->add(455, 'Sample Item', 100.99, 2, [])->associate(MockProduct::class);
+        $this->cart->add(455, 'Sample Item', 100.99, 2, [])->associate(Product::class);
 
         $item = $this->cart->get(455);
 
-        $this->assertEquals(MockProduct::class, $item->associatedModel, 'Item assocaited model should be ' . MockProduct::class);
+        $this->assertEquals(Product::class, $item->associatedModel, 'Item assocaited model should be ' . Product::class);
     }
 
     public function test_it_will_throw_an_exception_when_a_non_existing_model_is_being_associated()
@@ -112,11 +103,11 @@ class ItemTest extends PHPUnit\Framework\TestCase
 
     public function test_item_get_model()
     {
-        $this->cart->add(455, 'Sample Item', 100.99, 2, [])->associate(MockProduct::class);
+        $this->cart->add(455, 'Sample Item', 100.99, 2, [])->associate(Product::class);
 
         $item = $this->cart->get(455);
 
-        $this->assertInstanceOf(MockProduct::class, $item->model);
+        $this->assertInstanceOf(Product::class, $item->model);
         $this->assertEquals('Sample Item', $item->model->name);
         $this->assertEquals(455, $item->model->id);
     }
