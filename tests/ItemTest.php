@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Contracts\Events\Dispatcher;
+use Imanghafoori\EloquentMockery\FakeDB;
 use Mohamadtsn\ShoppingCart\Cart;
 use Mohamadtsn\ShoppingCart\CartCondition;
 use Tests\Helpers\Models\Product;
@@ -17,6 +18,7 @@ class ItemTest extends PHPUnit\Framework\TestCase
 
     public function setUp(): void
     {
+        FakeDB::mockQueryBuilder();
         $events = Mockery::mock(Dispatcher::class);
         $events->shouldReceive('dispatch');
 
@@ -27,10 +29,12 @@ class ItemTest extends PHPUnit\Framework\TestCase
             'SAMPLESESSIONKEY',
             require(__DIR__ . '/helpers/configMock.php')
         );
+        app()->make('shopping', $this->cart);
     }
 
     public function tearDown(): void
     {
+        FakeDB::dontMockQueryBuilder();
         Mockery::close();
     }
 
@@ -104,6 +108,13 @@ class ItemTest extends PHPUnit\Framework\TestCase
     public function test_item_get_model()
     {
         $this->cart->add(455, 'Sample Item', 100.99, 2, [])->associate(Product::class);
+
+        FakeDB::addRow('products', [
+            'id' => 455,
+            'name' => 'Sample Item',
+            'price' => 100.99,
+            'stock' => 4,
+        ]);
 
         $item = $this->cart->get(455);
 

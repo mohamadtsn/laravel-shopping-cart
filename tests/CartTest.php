@@ -556,7 +556,6 @@ class CartTest extends TestCase
         $this->cart->add($items);
 
         $content = $this->cart->getContent();
-        dd();
         foreach ($content as $item) {
             $this->assertInstanceOf(Product::class, $item->model);
         }

@@ -13,6 +13,7 @@ use Mohamadtsn\ShoppingCart\Validators\CartItemValidator;
 use Mohamadtsn\ShoppingCart\CartCollection;
 use Mohamadtsn\ShoppingCart\CartConditionCollection;
 use Mohamadtsn\ShoppingCart\ItemAttributeCollection;
+use Tests\Helpers\CustomItemCollection;
 
 /**
  * Class Cart
@@ -82,7 +83,7 @@ class Cart
      *
      * @var CartCollection|CartItemAbstract[]|null
      */
-    protected $cartItems;
+    public $cartItems;
 
     /**
      * This holds the cart conditions item in cart for association
@@ -108,7 +109,7 @@ class Cart
     /**
      * This holds the cart conditions item in cart for association
      *
-     * @var array
+     * @var bool
      */
     public bool $endSaveAllItems = true;
 
@@ -214,6 +215,7 @@ class Cart
                     );
                 }
                 $this->endSaveAllItems = true;
+                $this->resetCacheItemModel();
             } else {
                 $this->add(
                     $id['id'],
@@ -959,6 +961,11 @@ class Cart
         });
     }
 
+    public function resetCacheItemModel(): void
+    {
+        $this->cacheModels = [];
+    }
+
     public function initializeCacheItemModel()
     {
         if (empty($this->cartItems) || !empty($this->cacheModels)) {
@@ -978,7 +985,8 @@ class Cart
             return false;
         }
         $items->each(function ($item, $associated_model) {
-            $models = with(new $associated_model())->whereIn('id', $item->pluck('id')->toarray())->get();
+            $relations = $item->map->getEagerLoadRelationModel()->collapse()->toArray();
+            $models = with(new $associated_model())->with($relations)->whereIn('id', $item->pluck('id')->toarray())->get();
             if ($models->isNotEmpty()) {
                 $models->each(fn($model) => $this->cacheModels[$associated_model][$model->id] = $model);
             }
